@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html la='ja'>
+    <head>
+        <title>Map Select</title>
+        <meta charset="UTF-8">
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+        <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2-yOtiEQUN1hkJctQV0u7JEz-D___P2A&callback=initMap&libraries=&v=weekly"
+        defer
+        ></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <link rel="stylesheet" type="text/css" href="./style.css" />
+    </head>
+    <body>
+        <div id="map"></div>
+        圃場を選択
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script src="./map-select.js"></script>
+        <p id="mapList"></p>
+        <a href="./beacon-set2.html" onclick="sendMapNum()">圃場を決定</a>
+    </body>
+</html>

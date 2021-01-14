@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html la='ja'>
+    <head>
+        <title>Routes Set</title>
+        <meta charset="UTF-8">
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+        <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2-yOtiEQUN1hkJctQV0u7JEz-D___P2A&callback=initMap&libraries=&v=weekly"
+        defer
+        ></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <link rel="stylesheet" type="text/css" href="./style.css" />
+    </head>
+    <body>
+        <div id="map"></div>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script src="./routes-set.js"></script>
+        <a href="noble.html">農薬散布開始</a>
+        <button type="button" onclick="setBeaconAsRoutes()">選択したビーコンを登録</button>
+        <button type="reset" onclick="back()">一つ戻る</button>
+        <p id="beaconList"></p>
+    </body>
+</html>
