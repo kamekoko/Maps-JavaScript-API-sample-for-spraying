@@ -9,6 +9,8 @@ app.use(express.static('public'));
 var socket = require('socket.io');
 var io = socket(server);
 
+console.log("server is running");
+
 /////////////////////////////////////////////////////////////////////
 // set farm
 /////////////////////////////////////////////////////////////////////
@@ -47,7 +49,7 @@ var beaconsState = [beaconNum];
 var mapNum;
 var routes = []; // [[index, beacon_address, beacon_lat, beacon_lng], ...]
 
-function setMap(json) {
+function sendBeacons(json) {
     console.log(beaconNum);
     io.emit('beaconNum', beaconNum);
     for (let i = 0; i < beaconNum; i++) {
@@ -75,11 +77,11 @@ function sendMapLatLng() {
     })
 }
 
-function sendBeacons() {
+function setMapWithBeacons() {
     let beaconsJSON = JSON.parse(fs.readFileSync(("./public/beacons/map" + mapNum + "/data.json"), 'utf8'));
     beaconNum = beaconsJSON.length;
 
-    setMap(beaconsJSON);
+    sendBeacons(beaconsJSON);
 }
 
 function addBeacon(posNameAddress) {
@@ -97,8 +99,8 @@ function addBeacon(posNameAddress) {
     fs.writeFileSync(filename, data);
     beaconNum ++;
 
-    //setMap(JSON.parse(fs.readFileSync(filename, 'utf8')));
-    jsonObject = JSON.parse(data, 'utf8');
+    //sendBeacons(JSON.parse(fs.readFileSync(filename, 'utf8')));
+    // jsonObject = JSON.parse(data, 'utf8');
     noble.stopScanning();
 }
 
@@ -111,15 +113,18 @@ const noble = require('noble-winrt');
 // log file
 require('date-utils');
 let now = new Date();
-const logfile = 'log/' + now.toFormat('YYYY-M-D-HH24-MI-SS.csv');
+var logFile;
 
-fs.writeFile(logfile, '', function (err) {
-    if (err) { throw err; }
-    console.log(logfile);
-});
+function createLogFile() {
+    logFile = 'log/' + now.toFormat('YYYY-M-D-HH24-MI-SS.csv');
+    fs.writeFile(logFile, '', function (err) {
+        if (err) { throw err; }
+        console.log("log: " + logFile);
+    });
+}
 
 function writeLog (data) {
-    fs.appendFile(logfile, data + '\n', (err) => {
+    fs.appendFile(logFile, data + '\n', (err) => {
         if (err) throw err;
     })
 }
@@ -167,55 +172,39 @@ function calcSelfPos(rssi) {
 
 // poximity detection
 var proximityJudgment = 0;          // resister beacion = 0 or priximity judgement = 1
-const proximityJudgmentValue = -60; //threshold
+const threshold = -60; //threshold
 const timeInterval = 500;           // time interval to get RSSI
 const tx = -67;                     //TxPower
 const DISCOVERED = 1;
 const UNDISCOVERED = 0;
-var previousTime;
-var jsonObject;
 var beacons = [];
 
-let checkName = (name, index) => {
-    return (routes[index][1] == name) ? 1 : 0;
+let isAttentionBeacon = (name, index) => {
+    return (routes[index][1] == name) ? true : false;
 }
 
 let check = (address, rssi) => {
     // resister beacon
     if (proximityJudgment == 0) {
-        if (rssi > proximityJudgmentValue && ! beacons.includes(address)) {
+        if (rssi > threshold && ! beacons.includes(address)) {
             beacons.push(address);
             return 0;
         }
     }
     //proximity judgement
-    // else {
-    //     const t = now.getTime();
-    //     for (let i = 0; i < beaconNum; i++) {
-    //         if (jsonObject[i].name == address) {
-    //             // if (previousTime == t) break;
-    //             writeLog(now.toFormat('HH24:MI:SS') + "," + address + ',' + rssi);
-    //             previousTime = t;
-    //             if (rssi > proximityJudgmentValue && beaconsState[i]== UNDISCOVERED) {
-    //                 beaconsState[i]= DISCOVERED;
-    //                 return i;
-    //             }
-    //         }
-    //     }
-    // }
     else {
         if (address != routes[nowBeacon][1] && address != routes[nowBeacon + 1][1]) return;
         const t = now.getTime();
         writeLog(now.toFormat('HH24:MI:SS') + "," + address + "," + rssi);
         const index = routes[nowBeacon][0];
-        if (address == routes[nowBeacon + 1][1] && rssi > proximityJudgmentValue) {
+        if (address == routes[nowBeacon + 1][1] && rssi > threshold) {
             nowBeacon ++;
         }
         if (beaconsState[index] == UNDISCOVERED) {
             beaconsState[index] = DISCOVERED;
             return index;
         }
-        // if (rssi > proximityJudgmentValue && beaconsState[index] == UNDISCOVERED) {
+        // if (rssi > threshold && beaconsState[index] == UNDISCOVERED) {
         //    beaconsState[index] = DISCOVERED;
         //    return index;
         // }
@@ -230,9 +219,9 @@ let discovered = (peripheral) => {
         rssi: peripheral.rssi,
         address: peripheral.address
     };
-    if (proximityJudgment == 1 && checkName(device.name, nowBeacon) == 1) {
-        var selfPos = calcSelfPos(device.rssi);
-        io.emit('selfPos', selfPos);
+
+    if (proximityJudgment == 1 && isAttentionBeacon(device.name, nowBeacon)) {
+        io.emit('selfPos', calcSelfPos(device.rssi));
     }
 
     let index = check(device.name,device.rssi);
@@ -249,28 +238,29 @@ function scan() {
 }
 
 function scanStart() {
-    for (let i = 0; i < beaconNum; i++) beaconsState[i] = 0;
-    let filename = "./public/beacons/map" + mapNum + "/data.json";
-    let data = fs.readFileSync(filename, 'utf8');
-    jsonObject = JSON.parse(data, 'utf8');
     setInterval(scan, timeInterval);
 }
 
-function nobleOn(isProximityJudgement) {
-    if (isProximityJudgement) {
+function nobleOn(isProximityJudgment) {
+    if (isProximityJudgment) {
         proximityJudgment = 1;
         nowBeacon = 0;
+        for (let i = 0; i < beaconNum; i++) beaconsState[i] = 0;
+        createLogFile();
     }
-    if(noble.state === 'poweredOn'){
+
+    if (noble.state === 'poweredOn') {
         scanStart();
-    } else {
+    }
+    else {
         noble.on('stateChange', scanStart);
     }
+    console.log("noble on");
 }
 
 function nobleOff() {
     noble.stopScanning();
-    console.log("stop noble");
+    console.log("noble off");
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -284,15 +274,14 @@ function newConnection(socket) {
     socket.on('openMapSelectPage', sendMaps);
     socket.on('mapNum', setMapNum);
     socket.on('openBeaconPage', sendMapLatLng);
-    socket.on('mapReady', sendBeacons);
+    socket.on('mapReady', setMapWithBeacons);
     socket.on('newBeacon', nobleOn);
     socket.on('setBeacon', addBeacon);
-    socket.on('setmap', setMap);
+    socket.on('setmap', sendBeacons);
     socket.on('openRoutesPage', sendMapLatLng);
     socket.on('pushBeaconToRoutes', pushBeaconToRoutes);
     socket.on('noble', nobleOn);
     socket.on('stopNoble', nobleOff);
 }
 
-console.log("server and noble are running");
 io.sockets.on('connection', newConnection);
