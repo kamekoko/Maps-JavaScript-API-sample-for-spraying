@@ -59,10 +59,6 @@ function sendBeacons(json) {
     }
 }
 
-function setMapNum(data) {
-    mapNum = data;
-}
-
 function sendMapLatLng() {
     fs.readdir('public/map', (err, files) => { 
         if (err || files.length == null) return;
@@ -99,8 +95,6 @@ function addBeacon(posNameAddress) {
     fs.writeFileSync(filename, data);
     beaconNum ++;
 
-    //sendBeacons(JSON.parse(fs.readFileSync(filename, 'utf8')));
-    // jsonObject = JSON.parse(data, 'utf8');
     noble.stopScanning();
 }
 
@@ -109,8 +103,6 @@ function addBeacon(posNameAddress) {
 // noble
 /////////////////////////////////////////////////////////////////////
 const noble = require('noble-winrt');
-
-// log file
 require('date-utils');
 let now = new Date();
 var logFile;
@@ -129,7 +121,6 @@ function writeLog (data) {
     })
 }
 
-// set routes (order beacons)
 // var routes = []; // [[index, beacon_address, beacon_lat, beacon_lng], ...]
 var nowBeacon; // now beacon index
 function pushBeaconToRoutes(lat_lng) {
@@ -146,7 +137,7 @@ function pushBeaconToRoutes(lat_lng) {
 
 const LAT = 0;
 const LNG = 1;
-function haversineDistance(mk1, mk2) {
+let getHaversineDistance = (mk1, mk2) => {
     var R = 6371.0710; // Radius of the Earth in km
     var rlat1 = mk1[LAT] * (Math.PI/180);
      // Convert degrees to radians
@@ -160,12 +151,12 @@ function haversineDistance(mk1, mk2) {
     + Math.cos(rlat1) * Math.cos(rlat2)
     * Math.sin(difflon/2) * Math.sin(difflon/2)));
     return 1000 * d;
-  }
+}
 
 function calcSelfPos(rssi) {
     var b1 = [routes[nowBeacon][2], routes[nowBeacon][3]];          // [lat, lng]
     var b2 = [routes[nowBeacon + 1][2], routes[nowBeacon + 1][3]];  // [lat, lng]
-    var d = haversineDistance(b1, b2);
+    var d = getHaversineDistance(b1, b2);
     var r = Math.pow(10.0, (tx - rssi)/20);  // model of distance with RSSI
     return [b1[0] + (r/d*(b2[0] - b1[0])), b1[1] + (r/d*(b2[1] - b1[1]))];
 }
@@ -272,7 +263,7 @@ function newConnection(socket) {
 
     socket.on('marker', addMap);
     socket.on('openMapSelectPage', sendMaps);
-    socket.on('mapNum', setMapNum);
+    socket.on('mapNum', data => { mapNum = data; });
     socket.on('openBeaconPage', sendMapLatLng);
     socket.on('mapReady', setMapWithBeacons);
     socket.on('newBeacon', nobleOn);
