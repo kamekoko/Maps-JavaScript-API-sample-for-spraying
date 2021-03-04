@@ -20,12 +20,13 @@ fs.readdir('public/map', (err, files) => {
     else mapCount = files.length;
 })
 
-function addMap(latlng) {
+function resisterMap(latlng) {
     mapCount++;
     let newGeoJSON = '{ "type": "Point", "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84"}}, "coordinates": [' + latlng.lat + ', ' + latlng.lng + ']}';
     const mapfile = "public/map/map" + mapCount + ".geojson";
     fs.writeFileSync(mapfile, newGeoJSON);
     console.log("new map resistered");
+    io.emit('confirm', latlng);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -261,7 +262,7 @@ function nobleOff() {
 function newConnection(socket) {
     console.log('new connection: ' + socket.id);
 
-    socket.on('marker', addMap);
+    socket.on('resisterMap', resisterMap);
     socket.on('openMapSelectPage', sendMaps);
     socket.on('mapNum', data => { mapNum = data; });
     socket.on('openBeaconPage', sendMapLatLng);

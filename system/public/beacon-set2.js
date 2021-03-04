@@ -1,16 +1,11 @@
 var socket;
 socket = io.connect('http://localhost:3000');
-
 socket.emit('openBeaconPage', '');
-
 socket.on('maplatlng', init);
-
 socket.on('beaconNum', initilize);
 socket.on('deviceLoc', mapDevice);
-
 socket.on('beaconData', viewBeaconData);
 
-// google map //////////////////////////////////////////////////////////////////
 var map;
 function initMap(la, ln) {
   map = new google.maps.Map(document.getElementById("map"), {
@@ -23,8 +18,6 @@ function initMap(la, ln) {
     getClickLatLng(e.latLng, map);
   });
 }
-
-/////////////////////////////////////////////////////////////////////////////
 
 var marker = [];
 var markerCount = 0;
@@ -81,7 +74,6 @@ function setMarker(latlng) {
     markerCount ++;
 }
 
-// add beacon/////////////////////////////////////////////////////////////////////////
 var newBeacons = [];
 var newMarker;
 

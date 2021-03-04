@@ -4,7 +4,6 @@ socket = io.connect('http://localhost:3000');
 socket.emit('openMapSelectPage', "");
 socket.on('latlng', printFiles);
 
-// google map //////////////////////////////////////////////////////////////////
 var map;
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
@@ -14,11 +13,8 @@ function initMap() {
   canvas = document.getElementById('map');
 }
 
-/////////////////////////////////////////////////////////////////////////////
-
 var marker;
 var mapCount = 1;
-
 function setMarker(latlng) {
     console.log(latlng[0] + "," + latlng[1]);
     marker = new google.maps.Marker({

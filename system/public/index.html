@@ -4,13 +4,15 @@
     <title>Simple Map</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2-yOtiEQUN1hkJctQV0u7JEz-D___P2A&callback=initMap&libraries=&v=weekly"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2-yOtiEQUN1hkJctQV0u7JEz-D___P2A&callback=initMap&libraries=places&v=weekly"
       defer
     ></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <link rel="stylesheet" type="text/css" href="./style.css" />
   </head>
   <body>
+    <input id="pac-input" class="controls" type="text" placeholder="Search Box"/>
     <div id="map"></div>
     <button type="button" id="resister" onclick="resisterMap()">圃場を登録</button>
     <a href="map-select.html">圃場を選択</a>
@@ -19,5 +21,6 @@
       <li>lat: <span id="lat"></span></li>
       <li>lng: <span id="lng"></span></li>
     </ul>
+    <p id="displayOfAddedMap"></p>
   </body>
 </html>
