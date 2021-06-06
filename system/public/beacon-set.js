@@ -9,7 +9,7 @@ var devicesX;
 var devicesY;
 var deviceCount;
 
-const key = 'AIzaSyD2-yOtiEQUN1hkJctQV0u7JEz-D___P2A';
+const key = 'API_KEY';
 const mappa = new Mappa('Google', key);
 
 const style = [{
